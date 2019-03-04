@@ -400,7 +400,7 @@ extern "C" void LLVMRustAddAnalysisPasses(LLVMTargetMachineRef TM,
 extern "C" void LLVMRustConfigurePassManagerBuilder(
     LLVMPassManagerBuilderRef PMBR, LLVMRustCodeGenOptLevel OptLevel,
     bool MergeFunctions, bool SLPVectorize, bool LoopVectorize, bool PrepareForThinLTO,
-    const char* PGOGenPath, const char* PGOUsePath) {
+    const char* PGOGenPath, const char* PGOInstrPath, const char* PGOSamplePath) {
 #if LLVM_VERSION_GE(7, 0)
   unwrap(PMBR)->MergeFunctions = MergeFunctions;
 #endif
@@ -410,13 +410,17 @@ extern "C" void LLVMRustConfigurePassManagerBuilder(
   unwrap(PMBR)->PrepareForThinLTO = PrepareForThinLTO;
 
   if (PGOGenPath) {
-    assert(!PGOUsePath);
+    assert(!PGOInstrPath && !PGOSamplePath);
     unwrap(PMBR)->EnablePGOInstrGen = true;
     unwrap(PMBR)->PGOInstrGen = PGOGenPath;
   }
-  if (PGOUsePath) {
-    assert(!PGOGenPath);
-    unwrap(PMBR)->PGOInstrUse = PGOUsePath;
+  if (PGOInstrPath) {
+    assert(!PGOGenPath && !PGOSamplePath);
+    unwrap(PMBR)->PGOInstrUse = PGOInstrPath;
+  }
+  if (PGOSamplePath) {
+    assert(!PGOGenPath && !PGOInstrPath);
+    unwrap(PMBR)->PGOSampleUse = PGOSamplePath;
   }
 }
 

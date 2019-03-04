@@ -703,10 +703,16 @@ pub unsafe fn with_llvm_pmb(llmod: &llvm::Module,
         CString::new(s.as_bytes()).unwrap()
     });
 
-    let pgo_use_path = if config.pgo_use.is_empty() {
+    let pgo_instr_path = if config.pgo_instr_use.is_empty() {
         None
     } else {
-        Some(CString::new(config.pgo_use.as_bytes()).unwrap())
+        Some(CString::new(config.pgo_instr_use.as_bytes()).unwrap())
+    };
+
+    let pgo_sample_path = if config.pgo_sample_use.is_empty() {
+        None
+    } else {
+        Some(CString::new(config.pgo_sample_use.as_bytes()).unwrap())
     };
 
     llvm::LLVMRustConfigurePassManagerBuilder(
@@ -717,7 +723,8 @@ pub unsafe fn with_llvm_pmb(llmod: &llvm::Module,
         config.vectorize_loop,
         prepare_for_thin_lto,
         pgo_gen_path.as_ref().map_or(ptr::null(), |s| s.as_ptr()),
-        pgo_use_path.as_ref().map_or(ptr::null(), |s| s.as_ptr()),
+        pgo_instr_path.as_ref().map_or(ptr::null(), |s| s.as_ptr()),
+        pgo_sample_path.as_ref().map_or(ptr::null(), |s| s.as_ptr()),
     );
 
     llvm::LLVMPassManagerBuilderSetSizeLevel(builder, opt_size as u32);

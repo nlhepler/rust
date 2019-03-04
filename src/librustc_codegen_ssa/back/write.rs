@@ -57,7 +57,8 @@ pub struct ModuleConfig {
     pub opt_size: Option<config::OptLevel>,
 
     pub pgo_gen: Option<String>,
-    pub pgo_use: String,
+    pub pgo_instr_use: String,
+    pub pgo_sample_use: String,
 
     // Flags indicating which outputs to produce.
     pub emit_pre_lto_bc: bool,
@@ -95,7 +96,8 @@ impl ModuleConfig {
             opt_size: None,
 
             pgo_gen: None,
-            pgo_use: String::new(),
+            pgo_instr_use: String::new(),
+            pgo_sample_use: String::new(),
 
             emit_no_opt_bc: false,
             emit_pre_lto_bc: false,
@@ -394,7 +396,8 @@ pub fn start_async_codegen<B: ExtraBackendMethods>(
     }
 
     modules_config.pgo_gen = sess.opts.debugging_opts.pgo_gen.clone();
-    modules_config.pgo_use = sess.opts.debugging_opts.pgo_use.clone();
+    modules_config.pgo_instr_use = sess.opts.debugging_opts.pgo_instr_use.clone();
+    modules_config.pgo_sample_use = sess.opts.debugging_opts.pgo_sample_use.clone();
 
     modules_config.opt_level = Some(sess.opts.optimize);
     modules_config.opt_size = Some(sess.opts.optimize);

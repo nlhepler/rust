@@ -1338,8 +1338,10 @@ options! {DebuggingOptions, DebuggingSetter, basic_debugging_options,
                      "insert profiling code"),
     pgo_gen: Option<String> = (None, parse_opt_string, [TRACKED],
         "Generate PGO profile data, to a given file, or to the default location if it's empty."),
-    pgo_use: String = (String::new(), parse_string, [TRACKED],
-        "Use PGO profile data from the given profile file."),
+    pgo_instr_use: String = (String::new(), parse_string, [TRACKED],
+        "Use PGO profile data from the given instrumentation-based profile file."),
+    pgo_sample_use: String = (String::new(), parse_string, [TRACKED],
+        "Use PGO profile data from the given sampling-based profile file."),
     disable_instrumentation_preinliner: bool = (false, parse_bool, [TRACKED],
         "Disable the instrumentation pre-inliner, useful for profiling / PGO."),
     relro_level: Option<RelroLevel> = (None, parse_relro_level, [TRACKED],
@@ -1939,11 +1941,15 @@ pub fn build_session_options_and_crate_config(
         );
     }
 
-    if debugging_opts.pgo_gen.is_some() && !debugging_opts.pgo_use.is_empty() {
+    let prof_flags = debugging_opts.pgo_gen.is_some() as i32 \
+         + !debugging_opts.pgo_instr_use.is_empty() as i32 \
+         + !debugging_opts.pgo_sample_use.is_empty() as i32;
+    if prof_flags > 1 {
         early_error(
             error_format,
-            "options `-Z pgo-gen` and `-Z pgo-use` are exclusive",
-        );
+            "options `-Z pgo-gen`, `-Z pgo-instr-use`, \
+             and `-Z pgo-sample-use` are mutually exclusive",
+            );
     }
 
     let mut output_types = BTreeMap::new();
@@ -3083,7 +3089,11 @@ mod tests {
         assert_ne!(reference.dep_tracking_hash(), opts.dep_tracking_hash());
 
         opts = reference.clone();
-        opts.debugging_opts.pgo_use = String::from("abc");
+        opts.debugging_opts.pgo_instr_use = String::from("abc");
+        assert_ne!(reference.dep_tracking_hash(), opts.dep_tracking_hash());
+
+        opts = reference.clone();
+        opts.debugging_opts.pgo_sample_use = String::from("abc");
         assert_ne!(reference.dep_tracking_hash(), opts.dep_tracking_hash());
 
         opts = reference.clone();
